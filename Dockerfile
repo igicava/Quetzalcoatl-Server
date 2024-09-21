@@ -9,4 +9,4 @@ RUN go build -o quetzalcoatl cmd/main.go
 
 EXPOSE 8888
 
-CMD ["app/quetzalcoatl"]
+CMD ["./quetzalcoatl"]
