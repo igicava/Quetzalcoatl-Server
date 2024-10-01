@@ -45,12 +45,12 @@ func OpenDB() {
 
 	DB, err = sql.Open("sqlite3", "data.db")
 	if err != nil {
-		log.Fatalf("Error open DB")
+		log.Fatalf("Error open DB: %s", err)
 	}
 
 	err = DB.PingContext(ctx)
 	if err != nil {
-		log.Fatalf("Error ping DB")
+		log.Fatalf("Error ping DB: %s", err)
 	}
 }
 
