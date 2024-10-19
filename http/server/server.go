@@ -8,12 +8,12 @@ import (
 )
 
 func RunHTTPServer() {
-	r := http.NewServeMux() // Main router
+	r := http.NewServeMux() // Роутер
 	hub := service.NewHub()
 	go hub.Run()
 
+	// API
 	r.HandleFunc("/getmsg", handler.GetMessage)
-	r.HandleFunc("/setonline", handler.OnlineDevice)
 	r.HandleFunc("/reg", handler.Registration)
 	r.HandleFunc("/msgs", handler.GetMessagesForClient)
 	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

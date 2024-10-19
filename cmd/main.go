@@ -8,13 +8,12 @@ import (
 )
 
 func main() {
-	go func() { // Init DB
+	go func() { // Инициализация БД
 		models.OpenDB()
 		models.CreateTables()
-		models.OnlineDevices = make(map[string]models.Info)
 		log.Println("DB is start")
 	}()
 	
 	log.Println("Server is start on port 8888") 
-	server.RunHTTPServer() // Run server
+	server.RunHTTPServer() // Запуск сервера
 }

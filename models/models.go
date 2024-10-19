@@ -4,29 +4,24 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// Для авторизации
 type KeyForMessages struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type Info struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Address  string `json:"address"`
-	Port     string `json:"port"`
-}
-
+// Сообщение 
 type Message struct {
 	Sender   string `json:"sender"`
 	Receiver string `json:"receiver"`
 	Text     string `json:"text"`
 }
 
+// Для регистрации
 type RegisterForm struct {
 	Username   string `json:"username"`
 	FirstName  string `json:"first_name"`
@@ -35,9 +30,7 @@ type RegisterForm struct {
 	Password_2 string `json:"password_2"`
 }
 
-var DB *sql.DB
-var OnlineDevices map[string]Info
-var MU sync.Mutex
+var DB *sql.DB // БД
 
 func OpenDB() {
 	var err error
