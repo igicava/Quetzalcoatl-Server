@@ -3,22 +3,38 @@ package models
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	_ "github.com/mattn/go-sqlite3"
 )
 
+const SUPERSECRET = "ILOVEFEMBOYS"
+
 // Для авторизации
-type KeyForMessages struct {
+type Key struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Token    string `json:"token"`
 }
 
-// Сообщение 
+// Модель пользователя
+type UserModel struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Password  string `json:"password"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+// Сообщение
 type Message struct {
-	Sender   string `json:"sender"`
-	Receiver string `json:"receiver"`
-	Text     string `json:"text"`
+	Sender    string `json:"sender"`
+	Receiver  string `json:"receiver"`
+	Text      string `json:"text"`
+	AuthToken string `json:"token"`
 }
 
 // Для регистрации
@@ -32,6 +48,7 @@ type RegisterForm struct {
 
 var DB *sql.DB // БД
 
+// Открытие БД
 func OpenDB() {
 	var err error
 	ctx := context.TODO()
@@ -47,6 +64,7 @@ func OpenDB() {
 	}
 }
 
+// Создание таблиц БД
 func CreateTables() {
 	ctx := context.TODO()
 	const (
@@ -79,6 +97,7 @@ func CreateTables() {
 	}
 }
 
+// Создание нового сообщения в БД
 func NewMessage(msg Message) error {
 	ctx := context.TODO()
 	q := "INSERT INTO messages (receiver, sender, text) values ($1, $2, $3)"
@@ -105,7 +124,8 @@ func NewMessage(msg Message) error {
 	return nil
 }
 
-func RegisterNewUser(usr RegisterForm) (error) {
+// Регистрация нового пользователя
+func RegisterNewUser(usr RegisterForm) error {
 	ctx := context.TODO()
 	ts, err := DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -130,7 +150,8 @@ func RegisterNewUser(usr RegisterForm) (error) {
 	return nil
 }
 
-func GetMessages(key KeyForMessages) ([]Message, error) {
+// Получение сообщений для клиента
+func GetMessages(key Key) ([]Message, error) {
 	var (
 		messages []Message
 	)
@@ -152,4 +173,57 @@ func GetMessages(key KeyForMessages) ([]Message, error) {
 		messages = append(messages, m)
 	}
 	return messages, nil
+}
+
+// Получение юзера по нику
+func SelectUserByName(name string) (UserModel, error) {
+	u := UserModel{}
+	ctx := context.TODO()
+	var q = "SELECT name, password FROM users WHERE name = $1"
+	err := DB.QueryRowContext(ctx, q, name).Scan(&u.Name, &u.Password)
+	if err != nil {
+		return u, err
+	}
+
+	return u, nil
+}
+
+// Создание JWT токена
+func NewJWT(us string) string {
+	tm := time.Now()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"name": us,
+		"nbf":  tm.Unix(),
+		"now":  tm.Add(672 * time.Hour).Unix(),
+		"iat":  tm.Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(SUPERSECRET))
+	if err != nil {
+		log.Printf("Error token gen: %s", err)
+	}
+
+	return tokenString
+}
+
+// Валидация токена
+func ValidTocken(token string) (string, error) {
+	tokenFromString, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			panic(fmt.Errorf("unexpected signing method: %v", token.Header["alg"]))
+		}
+
+		return []byte(SUPERSECRET), nil
+	})
+
+	if err != nil {
+		log.Printf("Error on validation jwt token: %s", err)
+		return "", err
+	}
+
+	if claims, ok := tokenFromString.Claims.(jwt.MapClaims); ok {
+		return fmt.Sprint(claims["name"]), nil
+	} else {
+		return "", fmt.Errorf("error models.go : %s", err)
+	}
 }
