@@ -40,5 +40,5 @@ func RunHTTPServer() {
 		service.ServeWs(hub, w, r)
 	})
 
-	http.ListenAndServe(":80", r)
+	http.ListenAndServe(":8888", r)
 }

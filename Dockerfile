@@ -7,6 +7,6 @@ COPY . .
 RUN go mod tidy
 RUN go build -o quetzalcoatl cmd/main.go
 
-EXPOSE 80
+EXPOSE 8888
 
 CMD ["./quetzalcoatl"]
