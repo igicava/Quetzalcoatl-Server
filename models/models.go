@@ -18,6 +18,7 @@ type Key struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Token    string `json:"token"`
+	Option   string `json:"option"`
 }
 
 // Модель пользователя
@@ -84,6 +85,13 @@ func CreateTables() {
 			first_name TEXT, 
 			last_name TEXT
 		);`
+
+		contactsTable = `
+		CREATE TABLE IF NOT EXISTS contacts(
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			contact TEXT NOT NULL
+		);`
 	)
 
 	_, err := DB.ExecContext(ctx, messageTable)
@@ -94,6 +102,11 @@ func CreateTables() {
 	_, err = DB.ExecContext(ctx, userTable)
 	if err != nil {
 		log.Printf("Error create table users: %s", err)
+	}
+
+	_, err = DB.ExecContext(ctx, contactsTable)
+	if err != nil {
+		log.Printf("Error create table contacts: %s", err)
 	}
 }
 
@@ -186,6 +199,43 @@ func SelectUserByName(name string) (UserModel, error) {
 	}
 
 	return u, nil
+}
+
+func CheckContact(name string, contact string) (error) {
+	ctx := context.TODO()
+	var q = "SELECT name, contact FROM contacts WHERE name = $1 AND contact = $2"
+	err := DB.QueryRowContext(ctx, q, name, contact)
+	if err == nil {
+		return fmt.Errorf("contact is already exists")
+	}
+
+	return nil
+}
+
+// Добавление пользователя в контакты
+func AddContact(name string, contact string) (error) {
+	q := "INSERT INTO contacts (name, contact) values ($1, $2)"
+	ctx := context.TODO()
+	ts, err := DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	r, err := DB.ExecContext(ctx, q, name, contact)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	if err = ts.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Создание JWT токена

@@ -21,7 +21,7 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Максимальный размер сообщения, разрешенный от партнера.
-	maxMessageSize = 512
+	maxMessageSize = 250000
 )
 
 var (

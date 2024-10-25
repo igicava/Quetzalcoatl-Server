@@ -45,7 +45,20 @@ func Registration(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		err := models.RegisterNewUser(*usr)
+
+		_, err := models.SelectUserByName(usr.Username)
+		if err == nil {
+			log.Printf("User already exists: %s", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if usr.FirstName == "" || usr.LastName == "" || usr.Username == "" || usr.Password_1 == "" || usr.Password_1 != usr.Password_2 {
+			w.WriteHeader(418)
+			return
+		}
+
+		err = models.RegisterNewUser(*usr)
 		if err != nil {
 			log.Printf("Error insert reg-user: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -114,4 +127,42 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"token": token,
 	});
+}
+
+// Добавление в Контакты
+func NewContact(w http.ResponseWriter, r *http.Request) {
+	var op *models.Key
+	if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
+		log.Printf("Error decoding data for append contact: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	us, err := models.ValidTocken(op.Token)
+	if err != nil {
+		log.Printf("Error validation token: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user, err := models.SelectUserByName(us)
+	if err != nil {
+		log.Printf("Not found user err: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = models.CheckContact(user.Name, op.Option)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = models.AddContact(user.Name, op.Option) 
+	if err != nil {
+		log.Printf("Error add contact: %s", err)
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
 }
