@@ -19,6 +19,7 @@ func RunHTTPServer() {
 	r.HandleFunc("/reg", handler.Registration)
 	r.HandleFunc("/login", handler.Login)
 	r.HandleFunc("/msgs", handler.GetMessagesForClient)
+	r.HandleFunc("/addcontact", handler.NewContact)
 	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		token := r.URL.Query().Get("token")
 

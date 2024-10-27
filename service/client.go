@@ -12,13 +12,13 @@ import (
 
 const (
 	// Время, разрешенное для отправки сообщения к партнеру.
-	writeWait = 10 * time.Second
+	writeWait = 20 * time.Second
 
 	// Время, разрешенное для чтения следующего сообщения pong от партнера.
-	pongWait = 60 * time.Second
+	pongWait = 60 * time.Hour
 
 	// Отправлять пинги партнеру с этой периодичностью. Должно быть меньше pongWait.
-	pingPeriod = (pongWait * 9) / 10
+	pingPeriod = ((60 * time.Second) * 9) / 10
 
 	// Максимальный размер сообщения, разрешенный от партнера.
 	maxMessageSize = 250000

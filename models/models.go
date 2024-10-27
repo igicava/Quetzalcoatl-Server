@@ -21,6 +21,12 @@ type Key struct {
 	Option   string `json:"option"`
 }
 
+// Модель контакта
+type Contact struct {
+	Name string `json:"name"`
+	Contact string `json:"contact"`
+}
+
 // Модель пользователя
 type UserModel struct {
 	ID        int    `json:"id"`
@@ -186,6 +192,30 @@ func GetMessages(key Key) ([]Message, error) {
 		messages = append(messages, m)
 	}
 	return messages, nil
+}
+
+func GetContacts(key Key) ([]Contact, error) {
+	var (
+		contacts []Contact
+	)
+	const q = "SELECT name, contact FROM contacts WHERE name = $1"
+	ctx := context.TODO()
+
+	r, err := DB.QueryContext(ctx, q, key.Username)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	for r.Next() {
+		c := Contact{}
+		err := r.Scan(&c.Name, &c.Contact)
+		if err != nil {
+			return nil, err
+		}
+		contacts = append(contacts, c)
+	}
+	return contacts, nil
 }
 
 // Получение юзера по нику
