@@ -162,8 +162,15 @@ func NewContact(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = models.CheckContact(user.Name, op.Option)
+		_, err = models.SelectUserByName(op.Option)
 		if err != nil {
+			log.Println("contact user not found")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		err = models.CheckContact(user.Name, op.Option)
+		if err == nil {
 			log.Println("contact already exists")
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -172,7 +179,7 @@ func NewContact(w http.ResponseWriter, r *http.Request) {
 		err = models.AddContact(user.Name, op.Option) 
 		if err != nil {
 			log.Printf("Error add contact: %s", err)
-			w.WriteHeader(http.StatusServiceUnavailable)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}

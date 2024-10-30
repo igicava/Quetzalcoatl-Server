@@ -231,12 +231,13 @@ func SelectUserByName(name string) (UserModel, error) {
 	return u, nil
 }
 
+// Проверка есть ли такой контакт
 func CheckContact(name string, contact string) (error) {
 	ctx := context.TODO()
 	var q = "SELECT name, contact FROM contacts WHERE name = $1 AND contact = $2"
 	err := DB.QueryRowContext(ctx, q, name, contact)
-	if err == nil {
-		return fmt.Errorf("contact is already exists")
+	if err != nil {
+		return fmt.Errorf("not found")
 	}
 
 	return nil
