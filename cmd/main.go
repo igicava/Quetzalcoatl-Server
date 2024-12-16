@@ -14,6 +14,6 @@ func main() {
 		log.Println("DB is start")
 	}()
 	
-	log.Println("Server is start on port 8888") 
+	log.Println("Server (ver. 16.12) is start on port 8888") 
 	server.RunHTTPServer() // Запуск сервера
 }
