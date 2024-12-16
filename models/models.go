@@ -281,7 +281,7 @@ func NewJWT(us string) string {
 
 	tokenString, err := token.SignedString([]byte(SUPERSECRET))
 	if err != nil {
-		log.Printf("Error token gen: %s", err)
+		log.Printf("Error token gen for '%s': %s", us, err)
 	}
 
 	return tokenString

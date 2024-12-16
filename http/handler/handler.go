@@ -28,7 +28,7 @@ func GetMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := models.NewMessage(*msg); err != nil {
-		log.Printf("By handler; %s", err)
+		log.Printf("By handler; %s from %s", err, msg.Sender)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -38,7 +38,7 @@ func GetMessage(w http.ResponseWriter, r *http.Request) {
 // Регистрация нового пользователя
 func Registration(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		log.Println("user join to register")
+		
 		var usr *models.RegisterForm
 		if err := json.NewDecoder(r.Body).Decode(&usr); err != nil {
 			log.Printf("Error decoding registration form")
@@ -46,9 +46,11 @@ func Registration(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		log.Printf("user '%s' join to register", usr.Username)
+
 		_, err := models.SelectUserByName(usr.Username)
 		if err == nil {
-			log.Printf("User already exists: %s", err)
+			log.Printf("User '%s' already exists: %s", usr.Username, err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -60,7 +62,7 @@ func Registration(w http.ResponseWriter, r *http.Request) {
 
 		err = models.RegisterNewUser(*usr)
 		if err != nil {
-			log.Printf("Error insert reg-user: %s", err)
+			log.Printf("Error insert reg-user '%s': %s", usr.Username,err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -93,14 +95,14 @@ func GetMessagesForClient(w http.ResponseWriter, r *http.Request) {
 
 	ms, err := models.GetMessages(*k)
 	if err != nil {
-		log.Printf("Error select messages: %s", err)
+		log.Printf("Error select messages: %s for %s", err, name)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	cs, err := models.GetContacts(*k)
 	if err != nil {
-		log.Printf("Error get contacts: %s", err)
+		log.Printf("Error get contacts: %s for %s", err, name)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -157,28 +159,28 @@ func NewContact(w http.ResponseWriter, r *http.Request) {
 
 		user, err := models.SelectUserByName(us)
 		if err != nil {
-			log.Printf("Not found user err: %s", err)
+			log.Printf("Not found user '%s' err: %s", us, err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		_, err = models.SelectUserByName(op.Option)
 		if err != nil {
-			log.Println("contact user not found")
+			log.Printf("contact user not found '%s'", op.Option)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		err = models.CheckContact(user.Name, op.Option)
 		if err == nil {
-			log.Println("contact already exists")
+			log.Printf("contact '%s' for '%s' already exists", op.Option, user.Name)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		err = models.AddContact(user.Name, op.Option) 
 		if err != nil {
-			log.Printf("Error add contact: %s", err)
+			log.Printf("Error add contact '%s' for '%s': %s", op.Option , user.Name ,err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
